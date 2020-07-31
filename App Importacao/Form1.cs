@@ -35,7 +35,7 @@ namespace App_Importacao
                     using (SqlDataReader reader = command.ExecuteReader())
                     {
                         var apirest = new RestAPI("http://developer.smmind.com.br/faina/wp-json/wc/v3/", "ck_d53f726ac27e7eeaa4ad4fba1d19cc7d73c98a43", "cs_e9fba980112026e7b451875af9acf2071f76dc55");
-                        var wc = new WCObject(apirest);
+                        var wc = new WCObject(apirest); 
 
                         while (reader.Read())
                         {
