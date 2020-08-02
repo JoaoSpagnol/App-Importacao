@@ -1,6 +1,6 @@
 ﻿namespace App_Importacao
 {
-    partial class Form1
+    partial class FormAppImportacao
     {
         /// <summary>
         /// Variável de designer necessária.

@@ -8,10 +8,10 @@ using WooCommerceNET.WooCommerce.v3;
 
 namespace App_Importacao
 {
-    public partial class Form1 : Form
+    public partial class FormAppImportacao : Form
     {
         string connStr = ConfigurationManager.ConnectionStrings["myConnectionString"].ConnectionString;
-        public Form1()
+        public FormAppImportacao()
         {
             InitializeComponent();
         }
@@ -52,7 +52,7 @@ namespace App_Importacao
                                 regular_price = Convert.ToDecimal(reader["preco"].ToString()),
                                 sale_price = Convert.ToDecimal(reader["preco"].ToString()),
                                 images = BuscaImagem(Convert.ToInt32(reader["id"].ToString())),
-                                stock_quantity = 1
+                                stock_quantity = Convert.ToInt32(45)
                                 
                                 //variations=varis,
                             };
