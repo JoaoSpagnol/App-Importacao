@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data.SqlClient;
+using System.Linq;
 using System.Windows.Forms;
 using WooCommerceNET;
 using WooCommerceNET.WooCommerce.v3;
@@ -18,6 +19,7 @@ namespace App_Importacao
 
         private void btnIniciar_Click(object sender, EventArgs e)
         {
+            var int_variacao = 0;
             try
             {
               
@@ -39,25 +41,103 @@ namespace App_Importacao
 
                         while (reader.Read())
                         {
-                            var produtoadd = new Product
+                            var lstProdutoVariacao = BuscaVariacao(Convert.ToInt32(reader["id"].ToString()));
+
+                            if (lstProdutoVariacao.Any())
                             {
+                                if (lstProdutoVariacao.Count == 1)
+                                {
+                                    var produtoadd = new Product
+                                    {
 
-                                //options ....
-                                type = "simple",
-                                manage_stock = true,
-                                name = reader["nomeProduto"].ToString(),
-                                description = reader["html"].ToString(),
-                                sku = reader["referencia"].ToString(),
-                                price = Convert.ToDecimal(reader["preco"].ToString()),
-                                regular_price = Convert.ToDecimal(reader["preco"].ToString()),
-                                sale_price = Convert.ToDecimal(reader["preco"].ToString()),
-                                images = BuscaImagem(Convert.ToInt32(reader["id"].ToString())),
-                                stock_quantity = Convert.ToInt32(45)
-                                
-                                //variations=varis,
-                            };
+                                        //options ....
+                                        type = "simple",
+                                        manage_stock = true,
+                                        name = reader["nomeProduto"].ToString(),
+                                        description = reader["html"].ToString(),
+                                        sku = reader["referencia"].ToString(),
+                                        price = Convert.ToDecimal(reader["preco"].ToString()),
+                                        regular_price = Convert.ToDecimal(reader["preco"].ToString()),
+                                        sale_price = Convert.ToDecimal(reader["preco"].ToString()),
+                                        images = BuscaImagem(Convert.ToInt32(reader["id"].ToString())),
+                                        stock_quantity = Convert.ToInt32(reader["qty"].ToString()),
 
-                           var produtoadred = wc.Product.Add(produtoadd).Result;
+                                        //variations=varis,
+                                    };
+
+                                    var produtoadred = wc.Product.Add(produtoadd).Result;
+                                }
+                                else
+                                {
+                                    var produtoadd = new Product
+                                    {
+
+                                        //options ....
+                                        type = "variable",
+                                        manage_stock = true,
+                                        name = reader["nomeProduto"].ToString(),
+                                        description = reader["html"].ToString(),
+                                        sku = reader["referencia"].ToString(),
+                                        price = 0,
+
+                                        attributes = new List<ProductAttributeLine>
+                                 {
+                                    new ProductAttributeLine
+                                    {
+                                        name = "Tamanho do Aro",
+                                        
+                                        options = BuscarLista(lstProdutoVariacao),
+                                        visible = true,
+                                        variation = true
+                                    }
+                                    
+                                },
+                                        images = BuscaImagem(Convert.ToInt32(reader["id"].ToString()))
+                                        //variations=varis,
+                                    };
+
+                                    //Returns the new product with the id.
+                                    produtoadd = wc.Product.Add(produtoadd).Result;
+
+
+                                    if (lstProdutoVariacao.Any())
+                                    {
+                                        foreach (var itemvariacao in lstProdutoVariacao)
+                                        {
+                                            Variation var = new Variation
+                                            {
+                                                regular_price = Convert.ToDecimal(reader["preco"].ToString()),
+                                                sku = reader["referencia"].ToString() + int_variacao,
+                                                _virtual = false,
+                                                stock_quantity = Convert.ToInt32(reader["qty"].ToString()),
+                                                manage_stock = true,
+                                                attributes = new List<VariationAttribute>
+                                    {
+                                        new VariationAttribute
+                                        {
+                                            name = "Tamanho do Aro",
+                                            option =itemvariacao.Variacao
+                                        }
+                                    }
+                                            };
+                                            //Returns the new variation with the id
+                                            var = wc.Product.Variations.Add(var, produtoadd.id.Value).Result;
+
+                                            // Add the variation id to the product
+                                            produtoadd.variations.Add(var.id.Value);
+
+                                            //Update the product
+                                            produtoadd = wc.Product.Update(produtoadd.id.Value, produtoadd).Result;
+
+                                            int_variacao++;
+
+                                        }
+                                    }
+                                }
+                            }
+
+                            
+                          
                         }
                     }
                 }
@@ -108,6 +188,77 @@ namespace App_Importacao
             }
 
             return retorno;
+        }
+
+        private List<ProdutoVariacao> BuscaVariacao(int? pkProduto)
+        {
+            var retorno = new List<ProdutoVariacao>();
+
+            try
+            {
+
+                using (SqlConnection con = new SqlConnection(connStr))
+                {
+                    con.Open();
+
+                    using (SqlCommand command = new SqlCommand("select * from PlanilhaVariacao where produto=" + pkProduto, con))
+                    {
+                        using (SqlDataReader dr = command.ExecuteReader())
+                        {
+                            while (dr.Read())
+                            {
+                                var prodvaricao = new ProdutoVariacao
+                                {
+
+                                    Variacao = dr["variacao"].ToString(),
+                                };
+                                retorno.Add(prodvaricao);
+                            }
+                        }
+                    }
+
+                }
+
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+
+            return retorno;
+        }
+
+
+        /// <summary>
+        /// Buscars the lista.
+        /// </summary>
+        /// <param name="lstProdutoVariacao">The LST produto variacao.</param>
+        /// <returns></returns>
+        private List<string> BuscarLista(List<ProdutoVariacao> lstProdutoVariacao)
+        {
+            var lststring = new List<string>();
+            try
+            {
+                if (lstProdutoVariacao.Any())
+                {
+                    foreach (var produtoVariacao in lstProdutoVariacao)
+                    {
+                        lststring.Add(produtoVariacao.Variacao);
+                    }
+
+                    return lststring;
+                }
+            }
+            catch (Exception e)
+            {
+                throw;
+            }
+
+
+
+            return new List<string>();
         }
     }
 }
