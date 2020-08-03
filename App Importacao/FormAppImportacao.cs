@@ -12,11 +12,19 @@ namespace App_Importacao
     public partial class FormAppImportacao : Form
     {
         string connStr = ConfigurationManager.ConnectionStrings["myConnectionString"].ConnectionString;
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FormAppImportacao"/> class.
+        /// </summary>
         public FormAppImportacao()
         {
             InitializeComponent();
         }
 
+        /// <summary>
+        /// Handles the Click event of the btnIniciar control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         private void btnIniciar_Click(object sender, EventArgs e)
         {
             var int_variacao = 0;
@@ -150,6 +158,12 @@ namespace App_Importacao
             }
         }
 
+
+        /// <summary>
+        /// Buscas the imagem.
+        /// </summary>
+        /// <param name="pkProduto">The pk produto.</param>
+        /// <returns></returns>
         private List<ProductImage> BuscaImagem(int? pkProduto)
         {
             var retorno = new List<ProductImage>();
@@ -190,6 +204,11 @@ namespace App_Importacao
             return retorno;
         }
 
+        /// <summary>
+        /// Buscas the variacao.
+        /// </summary>
+        /// <param name="pkProduto">The pk produto.</param>
+        /// <returns></returns>
         private List<ProdutoVariacao> BuscaVariacao(int? pkProduto)
         {
             var retorno = new List<ProdutoVariacao>();
@@ -259,6 +278,28 @@ namespace App_Importacao
 
 
             return new List<string>();
+        }
+
+        private void AtulizaProduto(int? pkProduto)
+        {
+            try
+            {
+                using (SqlConnection con = new SqlConnection(connStr))
+                {
+                    con.Open();
+
+                    using (SqlCommand command = new SqlCommand("update Planilha set bit_Integrado=1 where entity_id=" + pkProduto, con))
+                    {
+                        command.ExecuteNonQuery();
+                    }
+
+                }
+            }
+            catch (SqlException e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
     }
 }
