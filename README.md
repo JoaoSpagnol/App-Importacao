@@ -3,3 +3,5 @@
 App de IMportacao
 
 Grupo Skype,solicitar para add via SKYPE => joaobeneidescosta@gmail.com
+
+Este Projeto é destinado para importação de qualqyer base para a base do Woorcommerce tem por apenas um item ou por variacoes 
